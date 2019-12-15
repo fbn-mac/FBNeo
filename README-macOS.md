@@ -5,9 +5,7 @@
 latest stable release. [View all releases](https://github.com/fbn-mac/FBNeo/releases).
 
 ## Compatibility
-Emulator has been tested successfully on High Sierra and above, though it's very
-likely that it may run on earlier versions (perhaps as low as Mountain Lion). If you
-can build and run successfully on an earlier version of macOS (OS X?), let me know.
+OS X 10.11 (El Capitan) and above
 
 ## Use
 Drop a set into the Launcher window to import it, double-click to start it.
