@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <Cocoa/Cocoa.h>
+#import "FBInputMapping.h"
 
-#import "FBMainThread.h"
+@implementation FBInputMapping
 
-@interface FBPreferencesController : NSWindowController<NSTabViewDelegate, NSTableViewDataSource, FBMainThreadDelegate>
+- (instancetype) init
 {
-    IBOutlet NSToolbar *toolbar;
-    IBOutlet NSTabView *contentTabView;
-    IBOutlet NSTableView *dipswitchTableView;
-    IBOutlet NSTableView *inputTableView;
-    IBOutlet NSButton *restoreDipButton;
-}
+    if (self = [super init]) {
+        _code = -1;
+    }
 
-- (IBAction) tabChanged:(id) sender;
-- (IBAction) showPreviousTab:(id) sender;
-- (IBAction) showNextTab:(id) sender;
-- (IBAction) restoreDipToDefault:(id) sender;
+    return self;
+}
 
 @end

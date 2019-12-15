@@ -15,16 +15,20 @@
 #import "FBPreferencesController.h"
 
 #import "NSWindowController+Core.h"
+#import "AKKeyCaptureView.h"
 
 @interface FBPreferencesController()
 
 - (void) resetDipSwitches:(NSArray *) switches;
+- (void) resetInputs;
 
 @end
 
 @implementation FBPreferencesController
 {
     NSArray<FBDipSetting *> *dipSwitches;
+    NSArray<FBInputMapping *> *inputs;
+    AKKeyCaptureView *keyCaptureView;
 }
 
 - (id) init
@@ -51,6 +55,19 @@
 {
     toolbar.selectedItemIdentifier = [NSUserDefaults.standardUserDefaults objectForKey:@"selectedPreferencesTab"];
     [self resetDipSwitches:[self.runloop dipSwitches]];
+    [self resetInputs];
+}
+
+- (id) windowWillReturnFieldEditor:(NSWindow *) sender
+                          toObject:(id) anObject
+{
+    if (anObject == inputTableView) {
+        if (!keyCaptureView)
+            keyCaptureView = [AKKeyCaptureView new];
+        return keyCaptureView;
+    }
+
+    return nil;
 }
 
 #pragma mark - Actions
@@ -133,6 +150,8 @@ didSelectTabViewItem:(NSTabViewItem *) tabViewItem
 {
     if (tableView == dipswitchTableView)
         return dipSwitches.count;
+    else if (tableView == inputTableView)
+        return inputs.count;
 
     return 0;
 }
@@ -142,7 +161,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
              row:(NSInteger) row
 {
     if (tableView == dipswitchTableView) {
-        FBDipSetting *sw = [dipSwitches objectAtIndex:row];
+        FBDipSetting *sw = dipSwitches[row];
         if ([tableColumn.identifier isEqualToString:@"name"]) {
             return sw.name;
         } else if ([tableColumn.identifier isEqualToString:@"value"]) {
@@ -161,6 +180,13 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
             }
             return @(sw.selectedIndex);
         }
+    } else if (tableView == inputTableView) {
+        FBInputMapping *im = inputs[row];
+        if ([tableColumn.identifier isEqualToString:@"name"]) {
+            return im.name;
+        } else if ([tableColumn.identifier isEqualToString:@"button"]) {
+            return [AKKeyCaptureView descriptionForKeyCode:im.code];
+        }
     }
 
     return nil;
@@ -176,6 +202,10 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
             dipSwitches[row].selectedIndex = [object intValue];
             [self.runloop applyDip:dipSwitches[row].switches[[object intValue]]];
         }
+    } else if (tableView == inputTableView) {
+        if ([tableColumn.identifier isEqualToString:@"button"]) {
+            inputs[row].code = (int) [AKKeyCaptureView keyCodeForDescription:object];
+        }
     }
 }
 
@@ -184,12 +214,16 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
 - (void) driverInitDidStart
 {
     [self resetDipSwitches:nil];
+    inputs = nil;
+    inputTableView.enabled = NO;
+    [inputTableView reloadData];
 }
 
 - (void) driverInitDidEnd:(NSString *) name
                   success:(BOOL) success
 {
     [self resetDipSwitches:[self.runloop dipSwitches]];
+    [self resetInputs];
 }
 
 #pragma mark - Private
@@ -199,6 +233,13 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
     dipSwitches = switches;
     restoreDipButton.enabled = dipswitchTableView.enabled = dipSwitches.count > 0;
     [dipswitchTableView reloadData];
+}
+
+- (void) resetInputs
+{
+    inputs = [self.input inputs];
+    inputTableView.enabled = inputs.count > 0;
+    [inputTableView reloadData];
 }
 
 @end

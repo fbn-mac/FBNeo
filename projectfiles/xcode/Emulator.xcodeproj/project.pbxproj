@@ -991,6 +991,9 @@
 		FE34741A23675C4C006646E7 /* FBAudio.mm in Sources */ = {isa = PBXBuildFile; fileRef = FE34741823675C4C006646E7 /* FBAudio.mm */; };
 		FE34742623696151006646E7 /* SDLAudioEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = FE34742423696150006646E7 /* SDLAudioEngine.m */; };
 		FE3BD61623A4979700570784 /* License.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FE3BD61523A4979700570784 /* License.rtf */; };
+		FE3BD61B23A5E6E000570784 /* AKKeyCaptureFieldCell.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61723A5E6DF00570784 /* AKKeyCaptureFieldCell.m */; };
+		FE3BD61C23A5E6E000570784 /* AKKeyCaptureView.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61A23A5E6E000570784 /* AKKeyCaptureView.m */; };
+		FE3BD61E23A60EC500570784 /* FBInputMapping.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61D23A60EC500570784 /* FBInputMapping.m */; };
 		FE811005236B73BD000B5F73 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = FE811004236B73BD000B5F73 /* m68kops.c */; };
 		FEA5E79223563F5400DA2D9D /* misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEA5E79023563F5400DA2D9D /* misc.cpp */; };
 		FEC5D3D6235C136F00ABA9FB /* FBVideo.mm in Sources */ = {isa = PBXBuildFile; fileRef = FEC5D3D5235C136F00ABA9FB /* FBVideo.mm */; };
@@ -2510,6 +2513,12 @@
 		FE34742423696150006646E7 /* SDLAudioEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLAudioEngine.m; sourceTree = "<group>"; };
 		FE34742523696151006646E7 /* SDLAudioEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLAudioEngine.h; sourceTree = "<group>"; };
 		FE3BD61523A4979700570784 /* License.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = License.rtf; sourceTree = "<group>"; };
+		FE3BD61723A5E6DF00570784 /* AKKeyCaptureFieldCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKKeyCaptureFieldCell.m; sourceTree = "<group>"; };
+		FE3BD61823A5E6E000570784 /* AKKeyCaptureView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKKeyCaptureView.h; sourceTree = "<group>"; };
+		FE3BD61923A5E6E000570784 /* AKKeyCaptureFieldCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKKeyCaptureFieldCell.h; sourceTree = "<group>"; };
+		FE3BD61A23A5E6E000570784 /* AKKeyCaptureView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKKeyCaptureView.m; sourceTree = "<group>"; };
+		FE3BD61D23A60EC500570784 /* FBInputMapping.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FBInputMapping.m; sourceTree = "<group>"; };
+		FE3BD61F23A60EE000570784 /* FBInputMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBInputMapping.h; sourceTree = "<group>"; };
 		FE811004236B73BD000B5F73 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
 		FE9A990D235F82C900507894 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		FEA5E79023563F5400DA2D9D /* misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = misc.cpp; sourceTree = "<group>"; };
@@ -2570,6 +2579,10 @@
 		FE0A7E9E2394B87B001E6997 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				FE3BD61923A5E6E000570784 /* AKKeyCaptureFieldCell.h */,
+				FE3BD61723A5E6DF00570784 /* AKKeyCaptureFieldCell.m */,
+				FE3BD61823A5E6E000570784 /* AKKeyCaptureView.h */,
+				FE3BD61A23A5E6E000570784 /* AKKeyCaptureView.m */,
 				FE0A7EA22394ED90001E6997 /* FBDropFileScrollView.h */,
 				FE0A7EA32394ED91001E6997 /* FBDropFileScrollView.m */,
 				FE0A7EA02394B87B001E6997 /* FBRomSetStatusAsNSImage.h */,
@@ -4794,6 +4807,8 @@
 			children = (
 				FEDA8F88235D226E007A4D26 /* FBInput.h */,
 				FEDA8F87235D226E007A4D26 /* FBInput.mm */,
+				FE3BD61F23A60EE000570784 /* FBInputMapping.h */,
+				FE3BD61D23A60EC500570784 /* FBInputMapping.m */,
 			);
 			path = macos;
 			sourceTree = "<group>";
@@ -5034,6 +5049,7 @@
 				FE1B274323561A780065200C /* d_pturn.cpp in Sources */,
 				FE1B241923561A750065200C /* pngwrite.c in Sources */,
 				FE1B266723561A770065200C /* d_lkage.cpp in Sources */,
+				FE3BD61E23A60EC500570784 /* FBInputMapping.m in Sources */,
 				FE1B279623561A790065200C /* k051649.cpp in Sources */,
 				FEED9E0E23576F5A00B7AF83 /* media.cpp in Sources */,
 				FE1B254B23561A760065200C /* d_thoop2.cpp in Sources */,
@@ -5042,6 +5058,7 @@
 				FE1B245623561A750065200C /* infback.c in Sources */,
 				FE1B271D23561A780065200C /* d_tigeroad.cpp in Sources */,
 				FE1B259723561A760065200C /* d_bwing.cpp in Sources */,
+				FE3BD61C23A5E6E000570784 /* AKKeyCaptureView.m in Sources */,
 				FE1B252123561A760065200C /* d_galpanic.cpp in Sources */,
 				FE1B27CA23561A790065200C /* nmk112.cpp in Sources */,
 				FE1B27B123561A790065200C /* load.cpp in Sources */,
@@ -5968,6 +5985,7 @@
 				FE1B268223561A770065200C /* pgm_run.cpp in Sources */,
 				FE1B25C123561A760065200C /* d_mikie.cpp in Sources */,
 				FE1B27E323561A790065200C /* namco_c45.cpp in Sources */,
+				FE3BD61B23A5E6E000570784 /* AKKeyCaptureFieldCell.m in Sources */,
 				FE1B245D23561A750065200C /* gzclose.c in Sources */,
 				FE1B279C23561A790065200C /* redbaron.cpp in Sources */,
 				FE1B26CF23561A780065200C /* d_capbowl.cpp in Sources */,

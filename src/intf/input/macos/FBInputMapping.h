@@ -12,22 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
-#import "FBMainThread.h"
+@interface FBInputMapping: NSObject
 
-@interface FBPreferencesController : NSWindowController<NSTabViewDelegate, NSTableViewDataSource, FBMainThreadDelegate>
-{
-    IBOutlet NSToolbar *toolbar;
-    IBOutlet NSTabView *contentTabView;
-    IBOutlet NSTableView *dipswitchTableView;
-    IBOutlet NSTableView *inputTableView;
-    IBOutlet NSButton *restoreDipButton;
-}
-
-- (IBAction) tabChanged:(id) sender;
-- (IBAction) showPreviousTab:(id) sender;
-- (IBAction) showNextTab:(id) sender;
-- (IBAction) restoreDipToDefault:(id) sender;
+@property NSString *name;
+@property NSString *info;
+@property int code;
 
 @end

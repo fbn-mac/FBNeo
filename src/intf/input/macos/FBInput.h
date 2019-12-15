@@ -14,6 +14,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "FBInputMapping.h"
+
 #define FBN_LMB 0x1
 #define FBN_RMB 0x2
 #define FBN_MMB 0x4
@@ -28,5 +30,7 @@
 - (void) keyDown:(NSEvent *) theEvent;
 - (void) keyUp:(NSEvent *) theEvent;
 - (void) flagsChanged:(NSEvent *) theEvent;
+
+- (NSArray<FBInputMapping *> *) inputs;
 
 @end
