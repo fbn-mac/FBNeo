@@ -121,8 +121,6 @@ int DrvExit()
 	return 0;
 }
 
-#ifndef BUILD_MACOS
-
 int ProgressUpdateBurner(double dProgress, const TCHAR* pszText, bool bAbs)
 {
 	return 0;
@@ -132,5 +130,3 @@ int AppError(TCHAR* szText, int bWarning)
 {
 	return 0;
 }
-
-#endif

@@ -29,6 +29,7 @@
     NSArray<FBDipSetting *> *dipSwitches;
     NSArray<FBInputMapping *> *inputs;
     AKKeyCaptureView *keyCaptureView;
+    BOOL inputsDirty;
 }
 
 - (id) init
@@ -68,6 +69,14 @@
     }
 
     return nil;
+}
+
+#pragma mark - NSWindowDelegate
+
+- (void) windowDidResignKey:(NSNotification *) notification
+{
+    // FIXME!!
+    NSLog(@"Save input here...");
 }
 
 #pragma mark - Actions
@@ -215,6 +224,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
 {
     [self resetDipSwitches:nil];
     inputs = nil;
+    inputsDirty = NO;
     inputTableView.enabled = NO;
     [inputTableView reloadData];
 }

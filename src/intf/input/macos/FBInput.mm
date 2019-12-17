@@ -269,6 +269,33 @@ int MacOSinpInit()
 {
     memset(keyState, 0, sizeof(keyState));
     memset(simKeyState, 0, sizeof(simKeyState));
+
+//    struct BurnInputInfo bii;
+//    for (int i = 0; BurnDrvGetInputInfo(&bii, i) == 0; i++) {
+//        const char *info = bii.szInfo;
+//        if (!info || strlen(info) < 3)
+//            continue;
+//
+//        struct GameInp *gi = &GameInp[i];
+//        if (*info == 'p' && *(info + 2) == ' ') {
+//            int p = *(info + 1) - '1';
+//            int base = 0x4000 | (p << 8);
+//
+//            info += 3;
+//            if (strncmp(info, "up", 2) == 0) {
+//                gi->Input.Switch.nCode = base | 0x02;
+//            } else if (strncmp(info, "down", 4) == 0) {
+//                gi->Input.Switch.nCode = base | 0x03;
+//            } else if (strncmp(info, "left", 4) == 0) {
+//                gi->Input.Switch.nCode = base | 0x00;
+//            } else if (strncmp(info, "right", 5) == 0) {
+//                gi->Input.Switch.nCode = base | 0x01;
+//            } else if (strncmp(info, "fire ", 5) == 0) {
+//                gi->Input.Switch.nCode = base | 0x80 | *(info + 5) - '1';
+//            }
+//        }
+//    }
+
     return 0;
 }
 

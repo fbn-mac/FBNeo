@@ -994,6 +994,8 @@
 		FE3BD61B23A5E6E000570784 /* AKKeyCaptureFieldCell.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61723A5E6DF00570784 /* AKKeyCaptureFieldCell.m */; };
 		FE3BD61C23A5E6E000570784 /* AKKeyCaptureView.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61A23A5E6E000570784 /* AKKeyCaptureView.m */; };
 		FE3BD61E23A60EC500570784 /* FBInputMapping.m in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD61D23A60EC500570784 /* FBInputMapping.m */; };
+		FE3BD62823A8C7EE00570784 /* media.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD62723A8C7EE00570784 /* media.cpp */; };
+		FE3BD62A23A8C8CE00570784 /* drv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE3BD62923A8C8CE00570784 /* drv.cpp */; };
 		FE811005236B73BD000B5F73 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = FE811004236B73BD000B5F73 /* m68kops.c */; };
 		FEA5E79223563F5400DA2D9D /* misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEA5E79023563F5400DA2D9D /* misc.cpp */; };
 		FEC5D3D6235C136F00ABA9FB /* FBVideo.mm in Sources */ = {isa = PBXBuildFile; fileRef = FEC5D3D5235C136F00ABA9FB /* FBVideo.mm */; };
@@ -1009,8 +1011,6 @@
 		FEED9E0623576DD800B7AF83 /* ips_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0523576DD800B7AF83 /* ips_manager.cpp */; };
 		FEED9E0823576E1900B7AF83 /* stated.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0723576E1900B7AF83 /* stated.cpp */; };
 		FEED9E0A23576E3800B7AF83 /* replay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0923576E3800B7AF83 /* replay.cpp */; };
-		FEED9E0C23576F2A00B7AF83 /* drv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0B23576F2900B7AF83 /* drv.cpp */; };
-		FEED9E0E23576F5A00B7AF83 /* media.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0D23576F5A00B7AF83 /* media.cpp */; };
 		FEED9E102357702D00B7AF83 /* run.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E0F2357702D00B7AF83 /* run.cpp */; };
 		FEED9E132358412E00B7AF83 /* bzip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E122358412D00B7AF83 /* bzip.cpp */; settings = {COMPILER_FLAGS = "-Wno-tautological-pointer-compare"; }; };
 		FEED9E152358414300B7AF83 /* stringset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEED9E142358414300B7AF83 /* stringset.cpp */; };
@@ -2519,6 +2519,8 @@
 		FE3BD61A23A5E6E000570784 /* AKKeyCaptureView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKKeyCaptureView.m; sourceTree = "<group>"; };
 		FE3BD61D23A60EC500570784 /* FBInputMapping.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FBInputMapping.m; sourceTree = "<group>"; };
 		FE3BD61F23A60EE000570784 /* FBInputMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBInputMapping.h; sourceTree = "<group>"; };
+		FE3BD62723A8C7EE00570784 /* media.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = media.cpp; sourceTree = "<group>"; };
+		FE3BD62923A8C8CE00570784 /* drv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = drv.cpp; sourceTree = "<group>"; };
 		FE811004236B73BD000B5F73 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
 		FE9A990D235F82C900507894 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		FEA5E79023563F5400DA2D9D /* misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = misc.cpp; sourceTree = "<group>"; };
@@ -2547,8 +2549,6 @@
 		FEED9E0523576DD800B7AF83 /* ips_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ips_manager.cpp; sourceTree = "<group>"; };
 		FEED9E0723576E1900B7AF83 /* stated.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stated.cpp; sourceTree = "<group>"; };
 		FEED9E0923576E3800B7AF83 /* replay.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = replay.cpp; sourceTree = "<group>"; };
-		FEED9E0B23576F2900B7AF83 /* drv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = drv.cpp; sourceTree = "<group>"; };
-		FEED9E0D23576F5A00B7AF83 /* media.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = media.cpp; sourceTree = "<group>"; };
 		FEED9E0F2357702D00B7AF83 /* run.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = run.cpp; sourceTree = "<group>"; };
 		FEED9E122358412D00B7AF83 /* bzip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bzip.cpp; sourceTree = "<group>"; };
 		FEED9E142358414300B7AF83 /* stringset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stringset.cpp; sourceTree = "<group>"; };
@@ -4668,6 +4668,7 @@
 			isa = PBXGroup;
 			children = (
 				FE1B287F235626280065200C /* burner_macos.h */,
+				FE3BD62923A8C8CE00570784 /* drv.cpp */,
 				FE0A7EA6239501FF001E6997 /* FBImporter.h */,
 				FE0A7EA5239501FF001E6997 /* FBImporter.m */,
 				FEED9E1A235845EE00B7AF83 /* FBMainThread.h */,
@@ -4677,6 +4678,7 @@
 				FE0A7E9C2393A1FE001E6997 /* FBScanner.mm */,
 				FEED9E1D2358B48C00B7AF83 /* main.cpp */,
 				FE9A990D235F82C900507894 /* main.h */,
+				FE3BD62723A8C7EE00570784 /* media.cpp */,
 				FEA5E79023563F5400DA2D9D /* misc.cpp */,
 				FE1B287E23561D1A0065200C /* tchar.h */,
 			);
@@ -4779,8 +4781,6 @@
 				FEED9E142358414300B7AF83 /* stringset.cpp */,
 				FEED9E122358412D00B7AF83 /* bzip.cpp */,
 				FEED9E0F2357702D00B7AF83 /* run.cpp */,
-				FEED9E0D23576F5A00B7AF83 /* media.cpp */,
-				FEED9E0B23576F2900B7AF83 /* drv.cpp */,
 				FEED9E0923576E3800B7AF83 /* replay.cpp */,
 				FEED9E0723576E1900B7AF83 /* stated.cpp */,
 				FEED9E0523576DD800B7AF83 /* ips_manager.cpp */,
@@ -5051,7 +5051,6 @@
 				FE1B266723561A770065200C /* d_lkage.cpp in Sources */,
 				FE3BD61E23A60EC500570784 /* FBInputMapping.m in Sources */,
 				FE1B279623561A790065200C /* k051649.cpp in Sources */,
-				FEED9E0E23576F5A00B7AF83 /* media.cpp in Sources */,
 				FE1B254B23561A760065200C /* d_thoop2.cpp in Sources */,
 				FE1B24FC23561A760065200C /* d_gaelco.cpp in Sources */,
 				FE1B249A23561A750065200C /* inp_interface.cpp in Sources */,
@@ -5137,6 +5136,7 @@
 				FE1B269923561A770065200C /* d_popeye.cpp in Sources */,
 				FE1B109A235615950065200C /* main.m in Sources */,
 				FE1B245123561A750065200C /* compress.c in Sources */,
+				FE3BD62A23A8C8CE00570784 /* drv.cpp in Sources */,
 				FE1B264D23561A770065200C /* d_ashnojoe.cpp in Sources */,
 				FE1B27B923561A790065200C /* nb1414m4_8bit.cpp in Sources */,
 				FE1B25F023561A760065200C /* d_hcastle.cpp in Sources */,
@@ -5290,7 +5290,6 @@
 				FE1B26D323561A780065200C /* d_deadang.cpp in Sources */,
 				FE1B23A723561A750065200C /* i8x41.cpp in Sources */,
 				FE1B259923561A760065200C /* d_decocass.cpp in Sources */,
-				FEED9E0C23576F2A00B7AF83 /* drv.cpp in Sources */,
 				FE1B24E323561A760065200C /* d_thunderj.cpp in Sources */,
 				FE1B243523561A750065200C /* XzIn.c in Sources */,
 				FE1B260B23561A760065200C /* d_twincobr.cpp in Sources */,
@@ -5665,6 +5664,7 @@
 				FE1B279923561A790065200C /* upd7759.cpp in Sources */,
 				FE1B25C923561A760065200C /* k051316.cpp in Sources */,
 				FE1B25AC23561A760065200C /* k056832.cpp in Sources */,
+				FE3BD62823A8C7EE00570784 /* media.cpp in Sources */,
 				FE1B26B623561A770065200C /* d_mrdo.cpp in Sources */,
 				FE0A7EA7239501FF001E6997 /* FBImporter.m in Sources */,
 				FE1B27DD23561A790065200C /* mathbox.cpp in Sources */,

@@ -16,7 +16,7 @@
 
 #import "FBMainThread.h"
 
-@interface FBPreferencesController : NSWindowController<NSTabViewDelegate, NSTableViewDataSource, FBMainThreadDelegate>
+@interface FBPreferencesController : NSWindowController<NSWindowDelegate, NSTabViewDelegate, NSTableViewDataSource, FBMainThreadDelegate>
 {
     IBOutlet NSToolbar *toolbar;
     IBOutlet NSTabView *contentTabView;
