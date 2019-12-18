@@ -19,7 +19,7 @@
 - (instancetype) init
 {
     if (self = [super init]) {
-        _code = -1;
+        _index = -1;
     }
 
     return self;

@@ -71,14 +71,6 @@
     return nil;
 }
 
-#pragma mark - NSWindowDelegate
-
-- (void) windowDidResignKey:(NSNotification *) notification
-{
-    // FIXME!!
-    NSLog(@"Save input here...");
-}
-
 #pragma mark - Actions
 
 - (void) tabChanged:(id) sender
@@ -194,7 +186,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
         if ([tableColumn.identifier isEqualToString:@"name"]) {
             return im.name;
         } else if ([tableColumn.identifier isEqualToString:@"button"]) {
-            return [AKKeyCaptureView descriptionForKeyCode:im.code];
+            return [AKKeyCaptureView descriptionForKeyCode:[self.input keyMappedToIndex:im.index]];
         }
     }
 
@@ -212,8 +204,11 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
             [self.runloop applyDip:dipSwitches[row].switches[[object intValue]]];
         }
     } else if (tableView == inputTableView) {
+        FBInputMapping *im = inputs[row];
         if ([tableColumn.identifier isEqualToString:@"button"]) {
-            inputs[row].code = (int) [AKKeyCaptureView keyCodeForDescription:object];
+            if ([self.input mapIndex:im.index
+                               toKey:(int) [AKKeyCaptureView keyCodeForDescription:object]])
+                [inputTableView reloadData]; // Other keys have changed
         }
     }
 }

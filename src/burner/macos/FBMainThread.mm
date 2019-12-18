@@ -93,7 +93,8 @@ typedef enum LogEntryType {
 
 - (void) main
 {
-    SetNVRAMPath([AppDelegate.sharedInstance.nvramPath cStringUsingEncoding:NSUTF8StringEncoding]);
+    AppDelegate *ad = AppDelegate.sharedInstance;
+    SetNVRAMPath([ad.nvramPath cStringUsingEncoding:NSUTF8StringEncoding]);
 
     while (!self.isCancelled) {
         if (pathToLoad == nil) {
@@ -133,12 +134,17 @@ typedef enum LogEntryType {
             continue;
         }
 
-        AppDelegate.sharedInstance.audio.volume = [NSUserDefaults.standardUserDefaults
-                                                   integerForKey:@"masterVolume"] / 100.0f;
+        ad.audio.volume = [NSUserDefaults.standardUserDefaults
+                           integerForKey:@"masterVolume"] / 100.0f;
+
+        NSString *dipPath = [ad.dipSwitchPath stringByAppendingPathComponent:
+                             [NSString stringWithFormat:@"%@.dip", self.setName]];
+        NSString *inputPath = [ad.inputPath stringByAppendingPathComponent:
+                               [NSString stringWithFormat:@"%@.inp", self.setName]];
+
+        [ad.input loadMapFrom:inputPath];
 
         // Load DIP switch config
-        NSString *dipPath = [AppDelegate.sharedInstance.dipSwitchPath stringByAppendingPathComponent:
-                             [NSString stringWithFormat:@"%@.dip", self.setName]];
         [self restoreDipState:dipPath];
         _dipSwitchesDirty = NO;
 
@@ -168,6 +174,9 @@ typedef enum LogEntryType {
         // Save DIP switch config
         if (_dipSwitchesDirty)
             [self saveDipState:dipPath];
+
+        if (ad.input.isMapDirty)
+            [ad.input saveMapTo:inputPath];
 
         @synchronized (observers) {
             for (id<FBMainThreadDelegate> o in observers) {

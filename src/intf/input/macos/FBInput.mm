@@ -147,7 +147,7 @@ static const int keyCodeToFbk[] = {
     FBK_RIGHTARROW, // 7c
     FBK_DOWNARROW, // 7d
     FBK_UPARROW, // 7e
-    0,
+    0, // 7f
 };
 static unsigned char keyState[256];
 static unsigned char simKeyState[256];
@@ -216,15 +216,101 @@ static unsigned char simKeyState[256];
     for (int i = 0; BurnDrvGetInputInfo(&bii, i) == 0; i++) {
         if (bii.nType == BIT_DIGITAL) {
             FBInputMapping *im = [FBInputMapping new];
+            im.index = i;
             im.name = [NSString stringWithCString:bii.szName
-                                         encoding:NSASCIIStringEncoding];
-            im.info = [NSString stringWithCString:bii.szInfo
                                          encoding:NSASCIIStringEncoding];
             [inputs addObject:im];
         }
     }
 
     return inputs;
+}
+
+- (int) keyMappedToIndex:(int) index
+{
+    // FIXME: upper bound check
+    if (!bDrvOkay || index < 0)
+        return -1;
+
+    struct BurnInputInfo bii;
+    if (BurnDrvGetInputInfo(&bii, index) == 0) {
+        int fbkCode = GameInp[index].Input.Switch.nCode;
+        if (fbkCode > 0 && fbkCode <= 0xff)
+            for (int i = 0; i < keyCodeCount; i++)
+                if (keyCodeToFbk[i] == fbkCode)
+                    return i;
+    }
+
+    return -1;
+}
+
+- (BOOL) mapIndex:(int) index
+            toKey:(int) key
+{
+    // FIXME: upper bound check
+    if (!bDrvOkay || index < 0 || index >= keyCodeCount)
+        return NO;
+
+    BOOL changed = NO;
+    struct BurnInputInfo bii;
+    if (BurnDrvGetInputInfo(&bii, index) == 0) {
+        int fbkCode = keyCodeToFbk[key];
+        if (fbkCode > 0) {
+            for (int i = 0; i < nGameInpCount; i++)
+                if (GameInp[i].Input.Switch.nCode == fbkCode) {
+                    GameInp[i].Input.Switch.nCode = 0;
+                    changed = YES;
+                }
+            GameInp[index].Input.Switch.nCode = fbkCode;
+            _isMapDirty = YES;
+        }
+    }
+
+    return changed;
+}
+
+- (BOOL) saveMapTo:(NSString *) path
+{
+    FILE *f = fopen([path cStringUsingEncoding:NSUTF8StringEncoding], "w");
+    if (!f)
+        return NO;
+
+    NSLog(@"Writing input map to %@", path);
+
+    struct BurnInputInfo bii;
+    for (int i = 0; BurnDrvGetInputInfo(&bii, i) == 0; i++) {
+        if (bii.nType == BIT_DIGITAL) {
+            uint16 code = GameInp[i].Input.Switch.nCode;
+            if (code > 0 && code < 0x100) {
+                // Keyboard
+                fprintf(f, "%d %d\n", i, GameInp[i].Input.Switch.nCode);
+            }
+        }
+    }
+    _isMapDirty = NO;
+
+    fclose(f);
+    return YES;
+}
+
+- (BOOL) loadMapFrom:(NSString *) path
+{
+    FILE *f = fopen([path cStringUsingEncoding:NSUTF8StringEncoding], "r");
+    if (!f)
+        return NO;
+
+    uint32 index;
+    uint32 code;
+    for (int i = 0; fscanf(f, "%d %d", &index, &code) == 2 && i < nGameInpCount; i++) {
+        struct BurnInputInfo bii;
+        if (BurnDrvGetInputInfo(&bii, index) == 0 && bii.nType == BIT_DIGITAL)
+            GameInp[index].Input.Switch.nCode = code;
+    }
+
+    fclose(f);
+    _isMapDirty = NO;
+
+    return YES;
 }
 
 @end
@@ -269,32 +355,6 @@ int MacOSinpInit()
 {
     memset(keyState, 0, sizeof(keyState));
     memset(simKeyState, 0, sizeof(simKeyState));
-
-//    struct BurnInputInfo bii;
-//    for (int i = 0; BurnDrvGetInputInfo(&bii, i) == 0; i++) {
-//        const char *info = bii.szInfo;
-//        if (!info || strlen(info) < 3)
-//            continue;
-//
-//        struct GameInp *gi = &GameInp[i];
-//        if (*info == 'p' && *(info + 2) == ' ') {
-//            int p = *(info + 1) - '1';
-//            int base = 0x4000 | (p << 8);
-//
-//            info += 3;
-//            if (strncmp(info, "up", 2) == 0) {
-//                gi->Input.Switch.nCode = base | 0x02;
-//            } else if (strncmp(info, "down", 4) == 0) {
-//                gi->Input.Switch.nCode = base | 0x03;
-//            } else if (strncmp(info, "left", 4) == 0) {
-//                gi->Input.Switch.nCode = base | 0x00;
-//            } else if (strncmp(info, "right", 5) == 0) {
-//                gi->Input.Switch.nCode = base | 0x01;
-//            } else if (strncmp(info, "fire ", 5) == 0) {
-//                gi->Input.Switch.nCode = base | 0x80 | *(info + 5) - '1';
-//            }
-//        }
-//    }
 
     return 0;
 }

@@ -24,6 +24,7 @@
 
 @property NSPoint mouseCoords;
 @property uint8 mouseButtonStates;
+@property BOOL isMapDirty;
 
 - (void) simReset;
 - (BOOL) usesMouse;
@@ -32,5 +33,11 @@
 - (void) flagsChanged:(NSEvent *) theEvent;
 
 - (NSArray<FBInputMapping *> *) inputs;
+- (int) keyMappedToIndex:(int) index;
+- (BOOL) mapIndex:(int) index
+            toKey:(int) key;
+
+- (BOOL) saveMapTo:(NSString *) path;
+- (BOOL) loadMapFrom:(NSString *) path;
 
 @end

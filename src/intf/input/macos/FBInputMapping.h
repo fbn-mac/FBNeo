@@ -17,7 +17,6 @@
 @interface FBInputMapping: NSObject
 
 @property NSString *name;
-@property NSString *info;
-@property int code;
+@property int index;
 
 @end

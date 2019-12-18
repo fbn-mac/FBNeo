@@ -72,11 +72,13 @@ static AppDelegate *sharedInstance = nil;
     _romPath = [_supportPath stringByAppendingPathComponent:@"ROMs"];
     _nvramPath = [_supportPath stringByAppendingPathComponent:@"NVRAM"];
     _dipSwitchPath = [_supportPath stringByAppendingPathComponent:@"DIPSwitches"];
+    _inputPath = [_supportPath stringByAppendingPathComponent:@"Input"];
 
     NSArray *paths = @[
         _romPath,
         _nvramPath,
         _dipSwitchPath,
+        _inputPath,
     ];
 
     for (NSString *path in paths)
