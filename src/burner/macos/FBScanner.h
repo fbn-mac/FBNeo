@@ -22,6 +22,7 @@
 @property NSString *parent;
 @property NSString *name;
 @property NSString *title;
+@property NSSet<NSString *> *tags;
 @property unsigned char status;
 
 @end

@@ -33,6 +33,8 @@
 
 #pragma mark - FBLauncherController
 
+#define CURRENT_SET_FORMAT 1
+
 @interface FBLauncherController ()
 
 - (void) reloadSets:(NSArray<FBROMSet *> *) romSets;
@@ -74,8 +76,9 @@
         }
     }
 
-    if (_romSets.count == 0)
-        [self rescanSets:self];
+    NSInteger setVersion = [NSUserDefaults.standardUserDefaults integerForKey:@"setFormat"];
+    if (_romSets.count == 0 || setVersion < CURRENT_SET_FORMAT)
+        [self initiateScan];
 }
 
 #pragma mark - NSWindowDelegate
@@ -121,6 +124,8 @@
     // Save to cache
     [NSKeyedArchiver archiveRootObject:romSets
                                 toFile:self.setCachePath];
+    [NSUserDefaults.standardUserDefaults setInteger:CURRENT_SET_FORMAT
+                                             forKey:@"setFormat"];
 
     [self reloadSets:romSets];
 }
@@ -153,7 +158,7 @@
     if (isCancelled || count < 1)
         return;
 
-    [self rescanSets:self];
+    [self initiateScan];
 }
 
 #pragma mark - FBDropFileScrollView

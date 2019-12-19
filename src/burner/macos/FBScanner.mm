@@ -37,6 +37,7 @@
         _parent = [coder decodeObjectForKey:@"parent"];
         _name = [coder decodeObjectForKey:@"name"];
         _title = [coder decodeObjectForKey:@"title"];
+        _tags = [coder decodeObjectForKey:@"tags"];
         _status = (unsigned char) [coder decodeIntForKey:@"status"];
     }
 
@@ -48,6 +49,7 @@
     [coder encodeObject:_parent forKey:@"parent"];
     [coder encodeObject:_name forKey:@"name"];
     [coder encodeObject:_title forKey:@"title"];
+    [coder encodeObject:_tags forKey:@"tags"];
     [coder encodeInt:(int) _status forKey:@"status"];
 }
 
@@ -133,6 +135,29 @@
     if (driver->szParent)
         set.parent = [NSString stringWithCString:driver->szParent
                                         encoding:NSASCIIStringEncoding];
+
+    uint32 hwMask = driver->Hardware & HARDWARE_PUBLIC_MASK;
+
+    NSMutableSet *tags = [NSMutableSet new];
+    if (hwMask == HARDWARE_CAPCOM_CPS1 ||
+        hwMask == HARDWARE_CAPCOM_CPS2 ||
+        hwMask == HARDWARE_CAPCOM_CPS3) {
+        // Count the number of buttons
+        struct BurnInputInfo bii;
+        int fireButtonCount = 0;
+        if (driver->GetInputInfo)
+            for (int i = 0; driver->GetInputInfo(&bii, i) == 0 && fireButtonCount < 6; i++)
+                if (strncasecmp(bii.szInfo, "p1 fire ", 8) == 0)
+                    fireButtonCount++;
+
+        if (fireButtonCount >= 6)
+            [tags addObject:@"buttons:sf"];
+    }
+    if (hwMask == HARDWARE_SNK_NEOGEO || hwMask == HARDWARE_SNK_NEOCD)
+        [tags addObject:@"buttons:neogeo"];
+
+    if (tags.count > 0)
+        set.tags = tags;
 
     return set;
 }
