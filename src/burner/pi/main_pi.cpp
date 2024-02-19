@@ -1,4 +1,5 @@
 #include "burner.h"
+#include <signal.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -155,8 +156,20 @@ int parseSwitches(int argc, char *argv[])
 	return dipSwitchSet;
 }
 
+int exec_argc;
+char **exec_argv;
+
+void sigintHandler(int s)
+{
+	fprintf(stderr, "Caught SIGINT, shutting down...\n");
+	nExitEmulator = 1;
+}
+
 int main(int argc, char *argv[])
 {
+	exec_argc = argc;
+	exec_argv = argv;
+
 	const char *romname = NULL;
 	nEnableFreeplayHack = 0;
 
@@ -187,7 +200,11 @@ int main(int argc, char *argv[])
 	}
 
 	ConfigAppLoad();
+#ifdef NO_SDL_VIDEO
+	SDL_Init(SDL_INIT_TIMER);
+#else
 	SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO);
+#endif
 	BurnLibInit();
 
 	int driverId = -1;
@@ -221,6 +238,7 @@ int main(int argc, char *argv[])
 	}
 
 	parseSwitches(argc, argv);
+	signal(SIGINT, sigintHandler);
 	RunMessageLoop();
 
 	DrvExit();

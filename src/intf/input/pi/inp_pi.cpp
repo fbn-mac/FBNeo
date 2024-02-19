@@ -117,6 +117,9 @@ static int piInputInit()
 	}
 	SDL_JoystickEventState(SDL_IGNORE);
 
+	if (nJoystickCount > 0) {
+		fprintf(stderr, "Found %d joysticks\n", nJoystickCount);
+	}
 	resetJoystickMap();
 
 	return 0;
@@ -413,7 +416,7 @@ static int readConfigFile(int pindex, const char *path, int sixButton)
 		if (!delim) continue;
 		*delim = '\0';
 
-		char *eol = strchr(delim, '\n');
+		char *eol = strchr(delim + 1, '\n');
 		if (!eol) continue;
 		*eol = '\0';
 

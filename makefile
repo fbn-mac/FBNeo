@@ -117,4 +117,7 @@ vc: FORCE
 pi: FORCE
 	@$(MAKE) -s -f makefile.pi
 
+ss: FORCE
+	@$(MAKE) -s -f makefile.ss
+
 FORCE:
