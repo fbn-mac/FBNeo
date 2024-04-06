@@ -147,8 +147,14 @@ static void render()
 {
     // VALIDATE BITMAP!
     for (int ry = source.sy, yo = 0; ry < source.dy; ry++, yo++) {
+        if (ry >= data.bitmap_height) {
+            break; // out of bounds
+        }
         unsigned char *rrow = buffer + ry * data.bitmap_pitch;
         for (int rx = source.sx, xo = 0; rx < source.dx; rx++, xo++) {
+            if (rx >= data.bitmap_width) {
+                break; // out of bounds
+            }
             int wy = dest.sy + yo;
             int wx = dest.sx + xo;
             unsigned short rcol = *((unsigned short *)rrow + rx);
