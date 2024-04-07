@@ -36,12 +36,16 @@ static int show_server_fps = 0;
 static int writePreamble(int clientfd)
 {
     fprintf(stderr, "writing buffer data...\n");
+    int flags = BurnDrvGetFlags();
+
     struct BufferData data = {
         bufferSize,
         nVidImagePitch,
         nVidImageWidth,
         nVidImageHeight,
-        nVidImageBPP
+        nVidImageBPP,
+        ((flags & BDF_ORIENTATION_VERTICAL) && !(flags & BDF_ORIENTATION_FLIPPED)) ? ATTR_VFLIP : 0,
+        MAGIC_NUMBER
     };
 
     int w = write(clientfd, &data, sizeof(data));
@@ -160,7 +164,7 @@ static int resetBuffer()
     fprintf(stderr, "Setting up screen...\n");
 
     free(bufferBitmap);
-    bufferSize = bufferWidth * bufferHeight * bufferBpp;
+    bufferSize = nVidImagePitch * bufferHeight;
     if ((bufferBitmap = (unsigned char *)malloc(bufferSize)) == NULL) {
         fprintf(stderr, "Error allocating buffer bitmap\n");
         return 0;
