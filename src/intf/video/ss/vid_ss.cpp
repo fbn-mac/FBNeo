@@ -16,11 +16,22 @@
 
 #define PORT "3500"
 
-static int bufferSize;
-static int bufferWidth;
-static int bufferHeight;
+#define RED(c) ((((c)>>11)&0x1f)*255/31)
+#define GREEN(c) ((((c)>>5)&0x3f)*255/63)
+#define BLUE(c) (((c)&0x1f)*255/31)
+#define RGB(r,g,b) ((((r)&0xff)>>3)<<11)|((((g)&0xff)>>2)<<5)|(((b)&0xff)>>3)
+
+static int renderBufferSize;
+static int renderBufferWidth;
+static int renderBufferHeight;
 static int bufferBpp;
-static unsigned char *bufferBitmap;
+static int outputBufferSize;
+static int outputBufferWidth;
+static int outputBufferHeight;
+static int aspectX;
+static int aspectY;
+static unsigned char *renderBuffer = NULL;
+static unsigned char *outputBuffer = NULL;
 
 static int screenRotated = 0;
 static int screenFlipped = 0;
@@ -36,15 +47,15 @@ static int show_server_fps = 0;
 static int writePreamble(int clientfd)
 {
     fprintf(stderr, "writing buffer data...\n");
-    int flags = BurnDrvGetFlags();
+    int width = screenRotated ? outputBufferHeight : outputBufferWidth;
 
     struct BufferData data = {
-        bufferSize,
-        nVidImagePitch,
-        nVidImageWidth,
-        nVidImageHeight,
-        nVidImageBPP,
-        ((flags & BDF_ORIENTATION_VERTICAL) && !(flags & BDF_ORIENTATION_FLIPPED)) ? ATTR_VFLIP : 0,
+        outputBufferSize,
+        width * bufferBpp,
+        width,
+        screenRotated ? outputBufferWidth : outputBufferHeight,
+        bufferBpp,
+        (screenRotated && !screenFlipped) ? ATTR_VFLIP : 0,
         MAGIC_NUMBER
     };
 
@@ -159,28 +170,46 @@ static void stop_listening()
     }
 }
 
-static int resetBuffer()
+static int resetBuffers()
 {
-    fprintf(stderr, "Setting up screen...\n");
+    fprintf(stderr, "Setting up renderBuffer...\n");
 
-    free(bufferBitmap);
-    bufferSize = nVidImagePitch * bufferHeight;
-    if ((bufferBitmap = (unsigned char *)malloc(bufferSize)) == NULL) {
-        fprintf(stderr, "Error allocating buffer bitmap\n");
+    if (outputBuffer != renderBuffer) {
+        free(outputBuffer);
+    }
+    free(renderBuffer);
+
+    renderBufferSize = renderBufferWidth * renderBufferHeight * bufferBpp;
+    if ((renderBuffer = (unsigned char *)malloc(renderBufferSize)) == NULL) {
+        fprintf(stderr, "Error allocating render buffer\n");
         return 0;
     }
+    fprintf(stderr, "Allocated render buffer of size (%d)\n", renderBufferSize);
 
-    fprintf(stderr, 
-        "Allocated bitmap buffer of size (%d; half: %d)\n",
-        nVidImageHeight * nVidImagePitch,
-        (nVidImageHeight * nVidImagePitch) / 2
-    );
-    
+    if (
+        outputBufferWidth != renderBufferWidth
+            || outputBufferHeight != renderBufferHeight
+    ) {
+        outputBufferSize = outputBufferWidth * outputBufferHeight * bufferBpp;
+        if ((outputBuffer = (unsigned char *)malloc(outputBufferSize)) == NULL) {
+            fprintf(stderr, "Error allocating output buffer\n");
+            return 0;
+        }
+        fprintf(stderr, "Allocated output buffer of size (%d)\n", outputBufferSize);
+    } else {
+        // No processing
+        outputBufferSize = renderBufferSize;
+        outputBuffer = renderBuffer;
+    }
+
     nBurnBpp = bufferBpp;
     nBurnPitch = nVidImagePitch;
-    pVidImage = bufferBitmap;
+    pVidImage = renderBuffer;
 
-    memset(bufferBitmap, 0, bufferSize);
+    memset(renderBuffer, 0, renderBufferSize);
+    if (outputBuffer != renderBuffer) {
+        memset(outputBuffer, 0, outputBufferSize);
+    }
 
     return 1;
 }
@@ -191,8 +220,6 @@ static int FbInit()
 {
     int virtualWidth;
     int virtualHeight;
-    int xAspect;
-    int yAspect;
 
     extern int exec_argc;
     extern char **exec_argv;
@@ -205,7 +232,7 @@ static int FbInit()
     }
 
     if (bDrvOkay) {
-        BurnDrvGetAspect(&xAspect, &yAspect);
+        BurnDrvGetAspect(&aspectX, &aspectY);
         BurnDrvGetVisibleSize(&virtualWidth, &virtualHeight);
         if (BurnDrvGetFlags() & BDF_ORIENTATION_VERTICAL) {
             screenRotated = 1;
@@ -219,12 +246,12 @@ static int FbInit()
             virtualWidth, virtualHeight,
             screenRotated ? "rotated" : "not rotated",
             screenFlipped ? "flipped" : "not flipped",
-            xAspect, yAspect);
+            aspectX, aspectY);
 
         nVidImageDepth = 16;
         nVidImageBPP = 2;
         
-        float ratio = (float) yAspect / xAspect;
+        float ratio = (float) aspectX / aspectY;
 
         if (!screenRotated) {
             nVidImageWidth = virtualWidth;
@@ -238,24 +265,38 @@ static int FbInit()
         
         SetBurnHighCol(nVidImageDepth);
         
-        bufferWidth = virtualWidth;
-        bufferHeight = virtualHeight;
+        renderBufferWidth = virtualWidth;
+        renderBufferHeight = virtualHeight;
         bufferBpp = nVidImageBPP;
 
-        fprintf(stderr, "buffer: %dx%d %dbpp\n", bufferWidth, bufferHeight, bufferBpp);
+        fprintf(stderr, "renderBuffer: %dx%d (%.04f ratio) @ %dbpp\n",
+            renderBufferWidth,
+            renderBufferHeight,
+            ratio,
+            bufferBpp);
 
-        if (!screenRotated) {
-            if (bufferHeight / ratio >= bufferWidth)
-                bufferWidth = bufferHeight / ratio;
-            else
-                bufferHeight = bufferWidth * ratio;
+        if (renderBufferWidth > 320) {
+            // FIXME!!
+            outputBufferWidth = (int)(renderBufferHeight * ((float) aspectX / aspectY));
+            outputBufferHeight = renderBufferHeight;
+            fprintf(stderr, "outputBuffer: %dx%d\n",
+                outputBufferWidth,
+                outputBufferHeight);
+        } else if (renderBufferHeight > 320) {
+            // FIXME!!
+            outputBufferHeight = (int)(renderBufferWidth * ((float) aspectY / aspectX));
+            outputBufferWidth = renderBufferWidth;
+            fprintf(stderr, "outputBuffer: %dx%d\n",
+                outputBufferWidth,
+                outputBufferHeight);
         } else {
-            bufferWidth = bufferHeight / ratio;
+            outputBufferWidth = renderBufferWidth;
+            outputBufferHeight = renderBufferHeight;
+            fprintf(stderr, "outputBuffer same as renderBuffer\n");
         }
-        fprintf(stderr, "W: %d; H: %d (%f ratio)\n", bufferWidth, bufferHeight, ratio);
-        
-        if (!resetBuffer()) {
-            fprintf(stderr, "Error resetting buffer\n");
+
+        if (!resetBuffers()) {
+            fprintf(stderr, "Error resetting buffers\n");
             return 1;
         }
 
@@ -269,9 +310,13 @@ static int FbExit()
 {
     stop_listening();
 
-    fprintf(stderr, "Destroying buffer\n");
-    free(bufferBitmap);
-    bufferBitmap = NULL;
+    fprintf(stderr, "Destroying buffers\n");
+    if (outputBuffer != renderBuffer) {
+        free(outputBuffer);
+        outputBuffer = NULL;
+    }
+    free(renderBuffer);
+    renderBuffer = NULL;
 
     return 0;
 }
@@ -318,14 +363,73 @@ static inline void log_fps()
     }
 }
 
+static void process() {
+    if (
+        renderBufferWidth != outputBufferWidth
+            || renderBufferHeight != outputBufferHeight
+    ) {
+        // Based on https://www.reddit.com/r/C_Programming/comments/16j7k4d/optimizing_image_downsampling_for_speed/
+        // Assumes a 2bpp bitmap
+        unsigned short *destRow = (unsigned short *) outputBuffer;
+        unsigned short *source = (unsigned short *) renderBuffer;
+        int destWidth = (screenRotated) ? outputBufferHeight : outputBufferWidth;
+        int destHeight = (screenRotated) ? outputBufferWidth : outputBufferHeight;
+        int srcWidth = (screenRotated) ? renderBufferHeight : renderBufferWidth;
+        int srcHeight = (screenRotated) ? renderBufferWidth : renderBufferHeight;
+
+        float ratioX = srcWidth / (float) (destWidth + 1);
+        float ratioY = srcHeight / (float) (destHeight + 1);
+        for (int y = 0; y < destHeight; ++y) {
+            int y1 = y * ratioY;
+            int y2 = (y + 1) * ratioY;
+
+            unsigned short *sourceRow = source + y1 * srcWidth;
+            unsigned short *dest = destRow;
+            for (int x = 0; x < destWidth; ++x) {
+                int x1 = x * ratioX;
+                int x2 = (x + 1) * ratioX;
+
+                unsigned int r = 0;
+                unsigned int g = 0;
+                unsigned int b = 0;
+
+                unsigned short *pixels = sourceRow;
+                for (int i = y1; i < y2; ++i) {
+                    for (int j = x1; j < x2; ++j) {
+                        unsigned short c = pixels[j];
+                        r += RED(c);
+                        g += GREEN(c);
+                        b += BLUE(c);
+                    }
+                    pixels += srcWidth;
+                }
+
+                int pixelCount = (x2 - x1) * (y2 - y1);
+                r /= pixelCount;
+                g /= pixelCount;
+                b /= pixelCount;
+                *dest++ = RGB(r,g,b);
+            }
+            destRow += destWidth;
+        }
+    } else {
+        fprintf(stderr, "Attempt to process identically-sized buffers\n");
+    }
+}
+
 static int FbPaint(int bValidate)
 {
     if (sockfd != -1 && !poll_and_accept()) {
         fprintf(stderr, "polling failed; closing all connections\n");
         stop_listening();
     }
+
+    if (renderBuffer != outputBuffer) {
+        process();
+    }
+
     for (int i = 0; i < clientfd_count; i++) {
-        int w = write(clientfds[i], bufferBitmap, bufferSize);
+        int w = write(clientfds[i], outputBuffer, outputBufferSize);
         if (w <= 0) {
             fprintf(stderr, "client %d disconnected\n", i);
             close(clientfds[i]);
