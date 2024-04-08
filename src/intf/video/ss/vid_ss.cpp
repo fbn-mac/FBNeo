@@ -16,6 +16,9 @@
 
 #define PORT "3500"
 
+#define SCALE_MODE_NONE            0
+#define SCALE_MODE_SHORTESTXASPECT 1
+
 #define RED(c) ((((c)>>11)&0x1f)*255/31)
 #define GREEN(c) ((((c)>>5)&0x3f)*255/63)
 #define BLUE(c) (((c)&0x1f)*255/31)
@@ -31,7 +34,14 @@ static int outputBufferHeight;
 static int aspectX;
 static int aspectY;
 static unsigned char *renderBuffer = NULL;
+// In instances where there is no processing,
+// outputBuffer will be pointing to renderBuffer.
 static unsigned char *outputBuffer = NULL;
+
+// Screen dimensions, in landscape orientation
+static int landscapeWidth = 0;
+static int landscapeHeight = 0;
+static int scaleMode = SCALE_MODE_NONE;
 
 static int screenRotated = 0;
 static int screenFlipped = 0;
@@ -214,6 +224,88 @@ static int resetBuffers()
     return 1;
 }
 
+static void initOutputBuffer()
+{
+    if (!screenRotated) {
+        if (renderBufferWidth > landscapeWidth) {
+            if (scaleMode == SCALE_MODE_SHORTESTXASPECT) {
+                outputBufferWidth = (int)(renderBufferHeight * ((float) aspectX / aspectY));
+                outputBufferHeight = renderBufferHeight;
+            }
+        } else if (renderBufferHeight > landscapeHeight) {
+            if (scaleMode == SCALE_MODE_SHORTESTXASPECT) {
+                outputBufferWidth = renderBufferWidth;
+                outputBufferHeight = (int)(renderBufferWidth * ((float) aspectY / aspectX));
+            }
+        }
+    } else {
+        if (renderBufferHeight > landscapeWidth) {
+            if (scaleMode == SCALE_MODE_SHORTESTXASPECT) {
+                outputBufferWidth = renderBufferWidth;
+                outputBufferHeight = (int)(renderBufferWidth * ((float) aspectY / aspectX));
+            }
+        } else if (renderBufferWidth > landscapeHeight) {
+            if (scaleMode == SCALE_MODE_SHORTESTXASPECT) {
+                outputBufferWidth = (int)(renderBufferHeight * ((float) aspectX / aspectY));
+                outputBufferHeight = renderBufferHeight;
+            }
+        }
+    }
+
+    if (outputBufferWidth == 0 || outputBufferHeight == 0) {
+        outputBufferWidth = renderBufferWidth;
+        outputBufferHeight = renderBufferHeight;
+        fprintf(stderr, "no dedicated outputBuffer\n");
+    } else {
+        fprintf(stderr, "outputBuffer: %dx%d\n",
+            outputBufferWidth,
+            outputBufferHeight);
+    }
+}
+
+static int parseDimensions(const char *arg)
+{
+    char buf[64];
+    strncpy(buf, arg, sizeof(buf) - 1);
+
+    char *delim = strchr(buf, 'x');
+    if (!delim) {
+        fprintf(stderr, "warning: dimensions ignored; missing w/h delimiter\n");
+        return 0;
+    }
+    *delim = '\0';
+    int width = atoi(buf);
+    int height = atoi(delim + 1);
+
+    if (width == 0 || height == 0) {
+        fprintf(stderr, "warning: dimensions ignored; '%s' not parsed as valid dimensions\n", arg);
+        return 0;
+    }
+
+    fprintf(stderr, "output device dimensions: %dx%d\n", width, height);
+
+    landscapeWidth = width;
+    landscapeHeight = height;
+
+    return 1;
+}
+
+static int parseScaleMode(const char *arg)
+{
+    if (strcmp(arg, "shortestxaspect") == 0) {
+        scaleMode = SCALE_MODE_SHORTESTXASPECT;
+        fprintf(stderr, "scaling mode: SCALE_MODE_SHORTESTXASPECT\n");
+    } else if (strcmp(arg, "none") == 0) {
+        scaleMode = SCALE_MODE_NONE;
+        fprintf(stderr, "scaling mode: SCALE_MODE_NONE\n");
+    } else {
+        fprintf(stderr, "warning: unrecognized scaling mode: %s\n", arg);
+        return 0;
+    }
+
+    return 1;
+}
+
 // Specific to FB
 
 static int FbInit()
@@ -226,9 +318,18 @@ static int FbInit()
 
     for (int i = 1; i < exec_argc; i++) {
         const char *arg = exec_argv[i];
-        if (strcmp(arg, "-fps") == 0) {
+        if (strcmp(arg, "--show-fps") == 0) {
             show_server_fps = 1;
+        } else if (strstr(arg, "--output-dims=") != NULL) {
+            parseDimensions(arg + 14);
+        } else if (strstr(arg, "--scale=") != NULL) {
+            parseScaleMode(arg + 8);
         }
+    }
+
+    if (scaleMode != SCALE_MODE_NONE && (landscapeWidth == 0 || landscapeHeight == 0)) {
+        fprintf(stderr, "error: scaling mode supplied without device dimensions\n");
+        return 1;
     }
 
     if (bDrvOkay) {
@@ -275,26 +376,7 @@ static int FbInit()
             ratio,
             bufferBpp);
 
-        if (renderBufferWidth > 320) {
-            // FIXME!!
-            outputBufferWidth = (int)(renderBufferHeight * ((float) aspectX / aspectY));
-            outputBufferHeight = renderBufferHeight;
-            fprintf(stderr, "outputBuffer: %dx%d\n",
-                outputBufferWidth,
-                outputBufferHeight);
-        } else if (renderBufferHeight > 320) {
-            // FIXME!!
-            outputBufferHeight = (int)(renderBufferWidth * ((float) aspectY / aspectX));
-            outputBufferWidth = renderBufferWidth;
-            fprintf(stderr, "outputBuffer: %dx%d\n",
-                outputBufferWidth,
-                outputBufferHeight);
-        } else {
-            outputBufferWidth = renderBufferWidth;
-            outputBufferHeight = renderBufferHeight;
-            fprintf(stderr, "outputBuffer same as renderBuffer\n");
-        }
-
+        initOutputBuffer();
         if (!resetBuffers()) {
             fprintf(stderr, "Error resetting buffers\n");
             return 1;
@@ -352,7 +434,7 @@ static inline void log_fps()
     static unsigned long long pms = 0;
     static int frames = 0;
     unsigned long long ms = current_millis();
-    int delta = ms - pms;
+    unsigned long long delta = ms - pms;
     if (delta > 1000L) {
         float fps = (float) frames / (delta / 1000L);
         fprintf(stderr, "\rfps: %.02f", fps);
