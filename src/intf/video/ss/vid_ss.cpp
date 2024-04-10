@@ -64,8 +64,8 @@ static int writePreamble(int clientfd)
         width * bufferBpp,
         width,
         screenRotated ? outputBufferWidth : outputBufferHeight,
-        bufferBpp,
-        (screenRotated && !screenFlipped) ? ATTR_VFLIP : 0,
+        PIXEL_FORMAT_RGB565,
+        (screenRotated && !screenFlipped) ? ATTR_ROT180 : 0,
         MAGIC_NUMBER
     };
 
