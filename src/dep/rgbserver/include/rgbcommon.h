@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-struct BufferData {
+struct FrameGeometry {
     unsigned int buffer_size;
     unsigned short bitmap_pitch;
     unsigned short bitmap_width;

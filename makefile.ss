@@ -84,7 +84,7 @@ endif
 
 incdir = $(foreach dir,$(alldir),-I$(srcdir)$(dir)) -I$(objdir)dep/generated \
     -I/local/include -I$(srcdir)dep/pi/include \
-    -I$(srcdir)dep/rgbclient/include \
+    -I$(srcdir)dep/rgbserver/include \
     -I$(srcdir)intf/input/sdl \
     -I/usr/include/SDL \
     -I/opt/vc/include/interface/vcos/pthreads \
@@ -96,7 +96,7 @@ else
   incdir += -I/opt/vc/include/interface/vmcs_host/linux
 endif
 
-lib	= -lstdc++ -lSDL -lpthread -L/opt/vc/lib
+lib	= -lstdc++ -lSDL -lpthread -L/opt/vc/lib -L$(srcdir)dep/rgbserver/lib -lrgbserver
 
 autdep	= $(depobj:.o=.d)
 drvdep	= $(drvsrc:.o=.d)
@@ -325,6 +325,14 @@ ifdef FORCE_UPDATE
 $(build_details.h): FORCE
 endif
 endif
+
+# RGBServer
+
+$(srcdir)dep/rgbserver/lib/librgbserver.a: FORCE
+	@echo Generating rgbserver
+	@$(MAKE) -C $(srcdir)dep/rgbserver/lib
+
+vid_ss.o: $(srcdir)dep/rgbserver/lib/librgbserver.a
 
 #
 #	Generate the gamelist
@@ -556,6 +564,7 @@ touch:
 clean:
 	@echo Removing build files...
 	-@rm -fr $(objdir) $(ctv.h) $(dep)generated gamelist.txt $(NAME)
+	@$(MAKE) -C $(srcdir)dep/rgbserver/lib clean
 
 ifdef	PERL
 	@echo Removing all files generated with perl scripts...

@@ -1,20 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <poll.h>
-#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "burner.h"
-#include "structs.h"
-
-#define PORT "3500"
+#include "rgbserver.h"
 
 #define SCALE_MODE_NONE            0
 #define SCALE_MODE_SHORTESTXASPECT 1
@@ -45,140 +37,8 @@ static int scaleMode = SCALE_MODE_NONE;
 
 static int screenRotated = 0;
 static int screenFlipped = 0;
-static int sockfd = -1;
-
-const int clientfd_size = 5;
-static int clientfd_count = 0;
-static int clientfds[clientfd_size];
-static struct pollfd pfd;
 
 static int show_server_fps = 0;
-
-static int writePreamble(int clientfd)
-{
-    fprintf(stderr, "writing buffer data...\n");
-    int width = screenRotated ? outputBufferHeight : outputBufferWidth;
-
-    struct BufferData data = {
-        outputBufferSize,
-        width * bufferBpp,
-        width,
-        screenRotated ? outputBufferWidth : outputBufferHeight,
-        PIXEL_FORMAT_RGB565,
-        (screenRotated && !screenFlipped) ? ATTR_ROT180 : 0,
-        MAGIC_NUMBER
-    };
-
-    int w = write(clientfd, &data, sizeof(data));
-    if (w != sizeof(data)) {
-        fprintf(stderr, "error writing data (wrote %d bytes)\n", w);
-        return 0;
-    }
-
-    return 1;
-}
-
-static void listen()
-{
-    fprintf(stderr, "listen()\n");
-
-    struct addrinfo hints, *ai, *p;
-
-    // Get us a socket and bind it
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    int rv;
-    int yes = 1;
-    if ((rv = getaddrinfo(NULL, PORT, &hints, &ai)) != 0) {
-        fprintf(stderr, "getaddrinfo() failed: %s\n", gai_strerror(rv));
-        return;
-    }
-
-    for (p = ai; p != NULL; p = p->ai_next) {
-        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sockfd < 0) {
-            continue;
-        }
-
-        setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-        if (bind(sockfd, p->ai_addr, p->ai_addrlen) < 0) {
-            close(sockfd);
-            continue;
-        }
-        break;
-    }
-
-    if (p == NULL) {
-        fprintf(stderr, "bind() failed\n");
-        close(sockfd);
-        sockfd = -1;
-        return;
-    }
-
-    freeaddrinfo(ai);
-    if (listen(sockfd, 10) == -1) {
-        fprintf(stderr, "listen() failed\n");
-        close(sockfd);
-        sockfd = -1;
-        return;
-    }
-
-    pfd.fd = sockfd;
-    pfd.events = POLLIN;
-}
-
-static int poll_and_accept()
-{
-    if (sockfd == -1) {
-        fprintf(stderr, "sockfd not set\n");
-        return 0;
-    }
-
-    int poll_count = poll(&pfd, 1, 0);
-    if (poll_count == -1) {
-        fprintf(stderr, "poll failed\n");
-        return 0;
-    }
-
-    static socklen_t addrlen;
-    static struct sockaddr_in remoteaddr;
-    static int newfd;
-
-    if (poll_count > 0 && pfd.events & POLLIN) {
-        addrlen = sizeof(remoteaddr);
-        newfd = accept(sockfd, (struct sockaddr *)&remoteaddr, &addrlen);
-        if (newfd == -1) {
-            fprintf(stderr, "accept() failed\n");
-            return 0;
-        } else if (clientfd_count + 1 < clientfd_size) {
-            fprintf(stderr, "new connection from %s\n",
-                inet_ntoa(remoteaddr.sin_addr));
-            writePreamble(newfd);
-            clientfds[clientfd_count++] = newfd;
-        } else {
-            fprintf(stderr, "ignoring new connection; maxed out\n");
-        }
-    }
-
-    return 1;
-}
-
-static void stop_listening()
-{
-    fprintf(stderr, "Closing client sockets...\n");
-    for (int i = 0; i < clientfd_count; i++) {
-        close(clientfds[i]);
-    }
-    clientfd_count = 0;
-    if (sockfd != -1) {
-        fprintf(stderr, "Closing server socket\n");
-        close(sockfd);
-        sockfd = -1;
-    }
-}
 
 static int resetBuffers()
 {
@@ -220,6 +80,18 @@ static int resetBuffers()
     if (outputBuffer != renderBuffer) {
         memset(outputBuffer, 0, outputBufferSize);
     }
+
+    int width = screenRotated ? outputBufferHeight : outputBufferWidth;
+    struct FrameGeometry data = {
+        outputBufferSize,
+        width * bufferBpp,
+        width,
+        screenRotated ? outputBufferWidth : outputBufferHeight,
+        PIXEL_FORMAT_RGB565,
+        (screenRotated && !screenFlipped) ? ATTR_ROT180 : 0,
+        MAGIC_NUMBER
+    };
+    rgbs_set_buffer_data(data);
 
     return 1;
 }
@@ -382,7 +254,10 @@ static int FbInit()
             return 1;
         }
 
-        listen();
+        if (!rgbs_start()) {
+            fprintf(stderr, "Error initializing rgbs\n");
+            return 1;
+        }
     }
 
     return 0;
@@ -390,7 +265,7 @@ static int FbInit()
 
 static int FbExit()
 {
-    stop_listening();
+    rgbs_end();
 
     fprintf(stderr, "Destroying buffers\n");
     if (outputBuffer != renderBuffer) {
@@ -501,23 +376,13 @@ static void process() {
 
 static int FbPaint(int bValidate)
 {
-    if (sockfd != -1 && !poll_and_accept()) {
-        fprintf(stderr, "polling failed; closing all connections\n");
-        stop_listening();
-    }
+    rgbs_poll();
 
     if (renderBuffer != outputBuffer) {
         process();
     }
 
-    for (int i = 0; i < clientfd_count; i++) {
-        int w = write(clientfds[i], outputBuffer, outputBufferSize);
-        if (w <= 0) {
-            fprintf(stderr, "client %d disconnected\n", i);
-            close(clientfds[i]);
-            clientfds[i--] = clientfds[--clientfd_count];
-        }
-    }
+    rgbs_send(outputBuffer, outputBufferSize);
     if (show_server_fps) {
         log_fps();
     }
