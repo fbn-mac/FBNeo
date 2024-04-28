@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <libudev.h>
 
 #include "burner.h"
 #include "inp_sdl_keys.h"
@@ -34,6 +35,7 @@ static void resetJoystickMap();
 static bool usesStreetFighterLayout();
 static int checkMouseState(unsigned int nSubCode);
 static int handleFreeplayHack(int player, int code);
+static const char * vendor_product_id(uint16_t index);
 
 #define JOY_DIR_LEFT  0x00
 #define JOY_DIR_RIGHT 0x01
@@ -343,7 +345,7 @@ static bool usesStreetFighterLayout()
 		if (BurnDrvGetInputInfo(&bii,i)) {
 			break;
 		}
-		
+
 		BurnDrvGetInputInfo(&bii, i);
 		if (bii.szName == NULL) {
 			bii.szName = "";
@@ -470,8 +472,18 @@ static int readConfigFile(int pindex, const char *path, int sixButton)
 	return 1;
 }
 
-static int configExists(char *path, int pathSize, const char *name)
+static int configExists(char *path, int joyindex, int pathSize, const char *name)
 {
+	if (joyindex < nJoystickCount) {
+		const char *deviceid = vendor_product_id(joyindex);
+		if (deviceid) {
+			snprintf(path, pathSize, "joyconfig/%s/%s.jc", deviceid, name);
+			if (access(path, F_OK) != -1) {
+				return 1;
+			}
+		}
+	}
+
 	snprintf(path, pathSize, "joyconfig/%s.jc", name);
 	return access(path, F_OK) != -1;
 }
@@ -481,7 +493,7 @@ static void resetJoystickMap()
 	for (int i = 0; i < 0x8000; i++) {
 		joyLookupTable[i] = -1;
 	}
-	
+
 	for (int i = 0; i < 512; i++) {
 		int code = SDLtoFBK[i];
 		keyLookupTable[code] = (code > 0) ? i : -1;
@@ -490,19 +502,49 @@ static void resetJoystickMap()
 	char path[512];
 	int sixButton = usesStreetFighterLayout();
 
-	int loadConfig = configExists(path, sizeof(path), BurnDrvGetText(DRV_NAME))
-		|| configExists(path, sizeof(path), BurnDrvGetText(DRV_PARENT))
-		|| (sixButton && configExists(path, sizeof(path), "capcom6"))
-		|| configExists(path, sizeof(path), "default");
-
-	if (loadConfig)
-		printf("Found joyconfig file in path '%s'\n", path);
-
 	for (int i = 0; i < 4; i++) {
 		setupDefaults(i);
-		if (loadConfig)
+		if (i >= nJoystickCount) {
+			continue;
+		}
+
+		int loadConfig = configExists(path, i, sizeof(path), BurnDrvGetText(DRV_NAME))
+			|| configExists(path, i, sizeof(path), BurnDrvGetText(DRV_PARENT))
+			|| (sixButton && configExists(path, i, sizeof(path), "capcom6"))
+			|| configExists(path, i, sizeof(path), "default");
+
+		if (loadConfig) {
+			fprintf(stderr, "Reading '%s' for P%d\n", path, i + 1);
 			readConfigFile(i, path, sixButton);
+		}
 	}
+}
+
+static const char * vendor_product_id(uint16_t index)
+{
+    static char idstring[32];
+    struct udev *udev = udev_new();
+    if (!udev) {
+        return NULL;
+    }
+
+    char devname[32];
+    snprintf(devname, sizeof(devname), "js%u", index);
+
+    struct udev_device *dev = udev_device_new_from_subsystem_sysname(udev, "input", devname);
+    if (dev) {
+        dev = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
+        if (dev) {
+            const char *vendor = udev_device_get_sysattr_value(dev, "idVendor");
+            const char *product = udev_device_get_sysattr_value(dev, "idProduct");
+            snprintf(idstring, sizeof(idstring) - 1, "%s:%s", vendor, product);
+        }
+        udev_device_unref(dev);
+    }
+
+    udev_unref(udev);
+
+    return idstring;
 }
 
 struct InputInOut InputInOutSDL = { piInputInit, piInputExit, NULL, piInputStart, piInputState, NULL, NULL, NULL, NULL, NULL, _T("Raspberry Pi input") };

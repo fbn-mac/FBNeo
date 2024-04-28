@@ -96,7 +96,7 @@ else
   incdir += -I/opt/vc/include/interface/vmcs_host/linux
 endif
 
-lib	= -lstdc++ -lSDL -lpthread -L/opt/vc/lib -L$(srcdir)dep/rgbserver/lib -lrgbserver
+lib	= -lstdc++ -lSDL -lpthread -L/opt/vc/lib -L$(srcdir)dep/rgbserver/lib -lrgbserver -ludev
 
 autdep	= $(depobj:.o=.d)
 drvdep	= $(drvsrc:.o=.d)
